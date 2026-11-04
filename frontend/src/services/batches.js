@@ -8,18 +8,3 @@ export async function getBatches({ page, limit, search, status, centre }, signal
   if (!result.success) throw new Error('The server could not load the batches.');
   return result;
 }
-
-async function sendBatchRequest(url, options) {
-  const response = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options });
-  const result = await response.json();
-  if (!response.ok || !result.success) throw new Error(result.message || `Request failed (HTTP ${response.status}).`);
-  return result;
-}
-
-export function createBatch(batch) {
-  return sendBatchRequest(`${API_URL}/batches`, { method: 'POST', body: JSON.stringify(batch) });
-}
-
-export function deleteBatch(batchCode) {
-  return sendBatchRequest(`${API_URL}/batches/${encodeURIComponent(batchCode)}`, { method: 'DELETE' });
-}
