@@ -29,4 +29,44 @@ router.get('/', (req, res) => {
   });
 });
 
+router.post('/', (req, res) => {
+  const { batchCode, courseName, centreName, startDate, enrolled, totalCapacity, status } = req.body ?? {};
+  const normalizedCode = String(batchCode ?? '').trim().toUpperCase();
+  const normalizedCourse = String(courseName ?? '').trim();
+  const normalizedCentre = String(centreName ?? '').trim();
+  const normalizedDate = String(startDate ?? '').trim();
+  const parsedEnrolled = Number(enrolled);
+  const parsedCapacity = Number(totalCapacity);
+  const allowedStatuses = ['Running', 'Upcoming', 'Completed'];
+
+  if (!normalizedCode || !normalizedCourse || !normalizedCentre || !normalizedDate || !allowedStatuses.includes(status) ||
+      !Number.isInteger(parsedEnrolled) || parsedEnrolled < 0 ||
+      !Number.isInteger(parsedCapacity) || parsedCapacity < 1 || parsedEnrolled > parsedCapacity) {
+    return res.status(400).json({ success: false, message: 'Provide valid batch details.' });
+  }
+
+  if (batches.some((batch) => batch.batchCode.toLowerCase() === normalizedCode.toLowerCase())) {
+    return res.status(409).json({ success: false, message: 'That batch code already exists.' });
+  }
+
+  const batch = {
+    batchCode: normalizedCode,
+    courseName: normalizedCourse,
+    centreName: normalizedCentre,
+    startDate: normalizedDate,
+    enrolled: parsedEnrolled,
+    totalCapacity: parsedCapacity,
+    status
+  };
+  batches.push(batch);
+  return res.status(201).json({ success: true, data: batch });
+});
+
+router.delete('/:batchCode', (req, res) => {
+  const index = batches.findIndex((batch) => batch.batchCode.toLowerCase() === req.params.batchCode.toLowerCase());
+  if (index === -1) return res.status(404).json({ success: false, message: 'Batch not found.' });
+  const [deleted] = batches.splice(index, 1);
+  return res.json({ success: true, data: deleted });
+});
+
 export default router;
